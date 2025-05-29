@@ -2,11 +2,15 @@ package com.nerzon_rest_begin.course.entity;
 
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.*;
 
-@Data
 @Entity
 @Table(name = "cats")
+@Getter
+@Setter
+@ToString
+@EqualsAndHashCode
+@NoArgsConstructor
 public class Cat {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -25,12 +29,6 @@ public class Cat {
         this.weight = weight;
     }
 
-    public Cat() {}
-
-    @Override
-    public String toString() {
-        return "Cat [id=" + id + ", name=" + name + ", age=" + age + ", weight=" + weight + "]";
-    }
 }
 
 
