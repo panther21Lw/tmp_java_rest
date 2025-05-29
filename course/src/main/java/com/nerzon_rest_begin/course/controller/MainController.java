@@ -6,8 +6,7 @@ import com.nerzon_rest_begin.course.repository.CatRepo;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.logging.log4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -15,41 +14,47 @@ import java.util.List;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
+@RequestMapping("/api/v1")
 public class MainController {
 
-    @Autowired
+    //why this is here if you don't use it?
     private final ObjectMapper objectMapper;
-
-    @Autowired
     private final CatRepo catRepo;
 
-    @PostMapping("/api/add")
-    public void addCat(@RequestBody Cat cat) {
-        System.out.println("New row: " + catRepo.save(cat));
+    @PostMapping("/cats")
+    public ResponseEntity<Cat> addCat(@RequestBody Cat cat) {
+        Cat savedCat = catRepo.save(cat);
+        return savedCat != null ? ResponseEntity.ok(savedCat) : ResponseEntity.notFound().build();
     }
 
     @SneakyThrows
-    @GetMapping("/api/all")
-    public List<Cat> allCats() {
-        return catRepo.findAll();
+    @GetMapping("/cats")
+    public ResponseEntity<List<Cat>> allCats() {
+        return ResponseEntity.ok(catRepo.findAll());
     }
 
-    @GetMapping("/api")
-    public Cat getCat(@RequestParam int id) {
-        return catRepo.findById(id).orElseThrow();
+    @GetMapping("/cats/{id}")
+    public ResponseEntity<Cat> getCat(@PathVariable("id") int id) {
+        Cat cat = catRepo.findById(id).orElse(null);
+        return cat != null ? ResponseEntity.ok(cat) : ResponseEntity.notFound().build();
     }
 
-    @DeleteMapping("/api")
-    public void deleteCat(@RequestParam int id) {
-        catRepo.deleteById(id);
-    }
-
-    @PutMapping("/api/add")
-    public String changeCat(@RequestBody Cat cat) {
-        if (!catRepo.existsById(cat.getId())) {
-            return "No such now";
+    @DeleteMapping("/cats/{id}")
+    public ResponseEntity<Boolean> deleteCat(@PathVariable("id") int id) {
+        if (catRepo.existsById(id)){
+            catRepo.deleteById(id);
+            return ResponseEntity.ok(Boolean.TRUE);
         }
-        log.info("New row: " + catRepo.save(cat));
-        return cat.toString();
+        return ResponseEntity.notFound().build();
+    }
+
+    @PutMapping("/cats/{id}")
+    public ResponseEntity<Cat> changeCat(@PathVariable("id") int id, @RequestBody Cat cat) {
+        if (catRepo.existsById(id)) {
+            cat.setId(id);
+            log.info("New cat added: " + cat);
+            return ResponseEntity.ok(catRepo.save(cat));
+        }
+        return ResponseEntity.notFound().build();
     }
 }
